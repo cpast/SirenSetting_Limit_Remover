@@ -1,8 +1,9 @@
 #include "pch.h"
-#include "hooker.h"
+#include "hooking.h"
 #include "SirenSettings_patcher.h"
 #include "RageStructs.h"
 #include <cassert>
+#include <psapi.h>
 #include "debug.h"
 
 const pattern CSirenSetting_Parser_Func = { "0f 85 ?? ?? ?? ?? b9 e8 05 00 00 e8", 0xe };

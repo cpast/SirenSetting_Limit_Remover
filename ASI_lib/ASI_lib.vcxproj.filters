@@ -21,19 +21,16 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hooker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RageStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SirenSettings_patcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="nmd_ldisasm.h">
+    <ClInclude Include="debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="debug.h">
+    <ClInclude Include="hooking.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,9 +47,6 @@
     <ClCompile Include="SirenSettings_patcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hooker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="debug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -61,5 +55,8 @@
     <NASM Include="patches.nasm">
       <Filter>Source Files</Filter>
     </NASM>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="HookingLib.lib" />
   </ItemGroup>
 </Project>
