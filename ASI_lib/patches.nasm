@@ -10,6 +10,15 @@ ComputeSirenIndex_ret dq 0
 GLOBAL ComputeSirenIndex_logic
 ComputeSirenIndex_logic dq 0
 
+GLOBAL LogConflict_nz_ret
+LogConflict_nz_ret dq 0
+
+GLOBAL LogConflict_z_ret
+LogConflict_z_ret dq 0
+
+GLOBAL LogConflict_logic
+LogConflict_logic dq 0
+
 GLOBAL GetSirenSetting_ret
 GetSirenSetting_ret dq 0
 
@@ -93,3 +102,30 @@ SetFlags_patch:
 	or al, byte [r14 + 0x55f]
 	cmp al, r12b
 	jmp [rel SetFlags_ret]
+
+GLOBAL LogConflict_patch
+
+LogConflict_patch:
+	jnz .nonzero
+	push rax
+	push rcx
+	push rdx
+	push r8
+	push r9
+	push r10
+	push r11
+	sub rsp, 0x20
+	mov rcx, rax
+	mov rdx, rbp
+	call [rel LogConflict_logic]
+	add rsp, 0x20
+	pop r11
+	pop r10
+	pop r9
+	pop r8
+	pop rdx
+	pop rcx
+	pop rax
+	jmp [rel LogConflict_z_ret]
+.nonzero:
+	jmp [rel LogConflict_nz_ret]

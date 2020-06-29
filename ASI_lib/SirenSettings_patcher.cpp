@@ -63,6 +63,10 @@ void LogRegisteredSirens(CVehicleModelInfoVarGlobal* Carcols, uint32_t startingI
 	logDebug("siren count: %4.4x\n", Carcols->sirens.count);
 }
 
+void LogConflict(CSirenSettings* siren1, CSirenSettings* siren2) {
+	log("CONFLICT: %s and %s share ID %i\n", siren1->Name, siren2->Name, siren1->Id);
+}
+
 bool ApplyIdHooks(void)
 {
 	if (idHooksAttempted)
@@ -120,6 +124,11 @@ bool ApplyIdHooks(void)
 		uint8_t mergeb[3] = { 0x44, 0x39, 0x08 };
 		success = success && WriteForeignMemory(MergeSirenLists + 0x42, mergea, 5);
 		success = success && WriteForeignMemory(MergeSirenLists + 0x5e, mergeb, 3);
+		LogConflict_logic = &LogConflict;
+		LogConflict_z_ret = (void*)(MergeSirenLists + 0x71);
+		LogConflict_nz_ret = (void*)InsertHookWithSkip(MergeSirenLists + 0x61,
+			MergeSirenLists + 0x63, (uintptr_t)&LogConflict_patch);
+		success = success && LogConflict_nz_ret;
 	}
 	logDebug("Merge: %s\n", success ? "true" : "false");
 	{
