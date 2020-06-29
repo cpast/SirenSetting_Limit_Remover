@@ -10,7 +10,6 @@ parMemberDefinition* parserInfo::FindMember(const char* name)
     if (members == NULL)
         return NULL;
     for (parMemberDefinition** member = members; *member != NULL; member++) {
-        //log("name: %8.8x\n", (*member)->name);
         if ((*member)->name == hash)
             return *member;
     }

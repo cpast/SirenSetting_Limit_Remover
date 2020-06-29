@@ -113,7 +113,7 @@ static_assert(sizeof(CSirenSettings) == 0x5e8, "SirenSettings wrong size");
 typedef struct CVehicleModelInfoVariation CVehicleModelInfoVariation, * PCVehicleModelInfoVariation;
 
 struct CVehicleModelInfoVariation {
-    void* name;
+    char* name;
     uint8_t padding[0x40];
     uint8_t lightIndex;
     uint8_t sirenIndex;

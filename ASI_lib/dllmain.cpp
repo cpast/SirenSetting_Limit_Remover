@@ -1,6 +1,5 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
-#include <cstdio>
 #include "SirenSettings_patcher.h"
 #include "debug.h"
 
@@ -15,14 +14,18 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
     case DLL_PROCESS_ATTACH:
         success = ApplyIdHooks();
-        //cleanup_log();
         if (!success) {
-            MessageBoxA(NULL, "fail_id", "fail", MB_OK);
+            log("ID hook application failed!\n");
         }
-        success = ApplyIndexHooks();
-        //cleanup_log();
-        if (!success) {
-            MessageBoxA(NULL, "fail_index", "fail", MB_OK);
+        else {
+            log("ID hooks applied.\n");
+            success = ApplyIndexHooks();
+            if (!success) {
+                log("Index hook application failed!\n");
+            }
+            else {
+                log("Index hooks applied.\n");
+            }
         }
         break;
     case DLL_THREAD_ATTACH:

@@ -29,33 +29,38 @@ uintptr_t GetSirenSetting_cache = 0;
 void ComputeSirenSettings(CVehicleModelInfoVarGlobal* Carcols, CVehicleModelInfoVariation* variations) {
 	uint16_t id = 0x100 * variations->field_0x4c;
 	id += variations->sirenId;
-	log("%s %2.2x %2.2x %4.4x\n", variations->name, variations->field_0x4c, variations->sirenId, id);
+	logDebug("%s %2.2x %2.2x %4.4x\n", variations->name, variations->field_0x4c, variations->sirenId, id);
 	if ((id == 0xff || id == 0xffff) && (variations->sirenIndex < Carcols->sirens.count)) {
 		uint16_t realId = (uint16_t)Carcols->sirens.sirens[variations->sirenIndex].Id;
 		variations->sirenId = realId & 0xff;
 		variations->field_0x4c = realId >> 8;
-		log("Index already there: %s %2.2x %2.2x %4.4x\n", variations->name, variations->field_0x4d, variations->sirenIndex, variations->sirenIndex);
+		variations->field_0x4d = 0;
+		logDebug("Index already there: %s %2.2x %2.2x %4.4x\n", variations->name, variations->field_0x4d, variations->sirenIndex, variations->sirenIndex);
+		log("Vehicle %s: id %i and index %i means new id %i\n", variations->name, id, variations->sirenIndex, realId);
 		return;
 	}
 	for (uint16_t i = 0; i < Carcols->sirens.count; i++) {
 		if (Carcols->sirens.sirens[i].Id == id) {
 			variations->sirenIndex = (uint8_t)i;
 			variations->field_0x4d = i >> 8;
-			log("Index computed: %s %2.2x %2.2x %4.4x\n", variations->name, variations->field_0x4d, variations->sirenIndex, i);
+			logDebug("Index computed: %s %2.2x %2.2x %4.4x\n", variations->name, variations->field_0x4d, variations->sirenIndex, i);
+			log("Vehicle %s: %i -> %i\n", variations->name, id, i);
 			return;
 		}
 	}
-	variations->sirenIndex = 0xff;
+	variations->sirenIndex = 0x0;
 	variations->field_0x4d = 0;
-	log("Index not found: %s %2.2x %2.2x %4.4x\n", variations->name, variations->field_0x4d, variations->sirenIndex, variations->sirenIndex);
+	logDebug("Index not found: %s %2.2x %2.2x %4.4x\n", variations->name, variations->field_0x4d, variations->sirenIndex, variations->sirenIndex);
+	log("Vehicle %s: %i NOT FOUND -> %i\n", variations->name, id, variations->sirenIndex);
 }
 
 void LogRegisteredSirens(CVehicleModelInfoVarGlobal* Carcols, uint32_t startingIndex, int length) {
 	for (int i = 0; i < length; i++) {
 		CSirenSettings* s = Carcols->sirens.sirens + startingIndex + i;
-		log("%s %4.4x %4.4x\n", s->Name, s->Id, startingIndex + i);
+		logDebug("%s %4.4x %4.4x\n", s->Name, s->Id, startingIndex + i);
+		log("SirenSetting %s: %i at %i\n", s->Name, s->Id, startingIndex + i);
 	}
-	log("siren count: %4.4x\n", Carcols->sirens.count);
+	logDebug("siren count: %4.4x\n", Carcols->sirens.count);
 }
 
 bool ApplyIdHooks(void)
@@ -67,29 +72,29 @@ bool ApplyIdHooks(void)
 	uintptr_t SirenSettingParser_Func = FindPattern(CSirenSetting_Parser_Func);
 	SirenSettingParser_Func += 9;
 	parserInfo* SirenSettingParser = (parserInfo*)(SirenSettingParser_Func - 11 + *(int32_t*)SirenSettingParser_Func);
-	log("SirenSettingParser: %p %p\n", SirenSettingParser_Func - 9, SirenSettingParser);
+	logDebug("SirenSettingParser: %p %p\n", SirenSettingParser_Func - 9, SirenSettingParser);
 	parserInfo* VariationParser = (parserInfo*)FindPattern(CVehicleModelInfoVariation_Parser);
-	log("VariationParser: %p\n", VariationParser);
+	logDebug("VariationParser: %p\n", VariationParser);
 	uintptr_t GetLightAndSirenIndices = FindPattern(GetLightAndSirenIndices_Pattern);
-	log("GetIndex: %p\n", (void*)GetLightAndSirenIndices);
+	logDebug("GetIndex: %p\n", (void*)GetLightAndSirenIndices);
 	uintptr_t MergeSirenLists = FindPattern(MergeSirenLists_Pattern);
-	log("Merge: %p\n", (void*)MergeSirenLists);
+	logDebug("Merge: %p\n", (void*)MergeSirenLists);
 	uintptr_t RegisterSirenIDs = FindPattern(RegisterSirenIDs_Pattern);
-	log("Register: %p\n", (void*)RegisterSirenIDs);
+	logDebug("Register: %p\n", (void*)RegisterSirenIDs);
 	uintptr_t CSirenSetting_Clone = FindPattern(CSirenSetting_Clone_Pattern);
-	log("Clone: %p\n", (void*)CSirenSetting_Clone);
+	logDebug("Clone: %p\n", (void*)CSirenSetting_Clone);
 	uintptr_t CSirenSetting_Initialize = FindPattern(CSirenSetting_Initialize_Pattern);
-	log("Init: %p\n", (void*)CSirenSetting_Initialize);
+	logDebug("Init: %p\n", (void*)CSirenSetting_Initialize);
 	success = SirenSettingParser && VariationParser && GetLightAndSirenIndices && MergeSirenLists && RegisterSirenIDs && CSirenSetting_Clone && CSirenSetting_Initialize;
 	if (!success)
 		return false;
-	log("Found patterns\n");
+	log("Found ID patterns.\n");
 
 	parMemberDefinition* SirenId = SirenSettingParser->FindMember("id");
 	parMemberDefinition* VariationId = VariationParser->FindMember("sirenSettings");
 	if (SirenId == NULL || VariationId == NULL)
 		return false;
-	log("Found members\n");
+	log("Found ID members.\n");
 	SirenId->type = PsoDataType::u32;
 	VariationId->type = PsoDataType::u16;
 	{
@@ -98,32 +103,32 @@ bool ApplyIdHooks(void)
 		success = success && WriteForeignMemory(CSirenSetting_Clone + 0xa, clonea, 2);
 		success = success && WriteForeignMemory(CSirenSetting_Clone + 0x12, cloneb, 2);
 	}
-	log("Clone: %s\n", success ? "true" : "false");
+	logDebug("Clone: %s\n", success ? "true" : "false");
 	{
 		uint8_t reg = 0xc3;
 		success = success && InsertHook(RegisterSirenIDs, (uintptr_t) &LogRegisteredSirens); //WriteForeignMemory(RegisterSirenIDs, &reg, 1);
 	}
-	log("Register: %s\n", success ? "true" : "false");
+	logDebug("Register: %s\n", success ? "true" : "false");
 	{
 		SirenSettings_init_ret = (void*) InsertHookWithSkip(CSirenSetting_Initialize + 0x1f, 
 			CSirenSetting_Initialize + 0x22, (uintptr_t) &SirenSettings_init_patch);
 		success = success && SirenSettings_init_ret;
 	}
-	log("Init: %s\n", success ? "true" : "false");
+	logDebug("Init: %s\n", success ? "true" : "false");
 	{
 		uint8_t mergea[5] = { 0x44, 0x8b, 0x4d, 0x00, 0x90 };
 		uint8_t mergeb[3] = { 0x44, 0x39, 0x08 };
 		success = success && WriteForeignMemory(MergeSirenLists + 0x42, mergea, 5);
 		success = success && WriteForeignMemory(MergeSirenLists + 0x5e, mergeb, 3);
 	}
-	log("Merge: %s\n", success ? "true" : "false");
+	logDebug("Merge: %s\n", success ? "true" : "false");
 	{
 		ComputeSirenIndex_logic = &ComputeSirenSettings;
 		ComputeSirenIndex_ret = (void*)InsertHookWithSkip(GetLightAndSirenIndices + 0x61,
 			GetLightAndSirenIndices + 0x9c, (uintptr_t) &ComputeSirenIndex_patch);
 		success = success && ComputeSirenIndex_ret;
 	}
-	log("Compute: %s\n", success ? "true" : "false");
+	logDebug("Compute: %s\n", success ? "true" : "false");
 	idHooksSucceeded = success;
 	return success;
 }
@@ -140,14 +145,16 @@ bool ApplyIndexHooks(void)
 
 	uintptr_t GetSirenSetting = FindPattern(GetSirenSetting_Pattern);
 	GetSirenSetting_cache = GetSirenSetting;
-	log("GetSirenSetting: %p\n", GetSirenSetting);
+	logDebug("GetSirenSetting: %p\n", GetSirenSetting);
 	uintptr_t CopyVarToModel = FindPattern(CopyVarToModel_Pattern);
-	log("CopyVarToModel: %p\n", CopyVarToModel);
+	logDebug("CopyVarToModel: %p\n", CopyVarToModel);
 	uintptr_t SetFlags = FindPattern(SetFlags_pattern);
-	log("SetFlags: %p\n", SetFlags);
+	logDebug("SetFlags: %p\n", SetFlags);
 	success = GetSirenSetting && CopyVarToModel && SetFlags;
 	if (!success)
 		return false;
+	log("Found index patterns.");
+
 	int32_t* carcols_mov = (int32_t*)(GetSirenSetting + 0xd);
 	uintptr_t carcols = GetSirenSetting + 0x11;
 	carcols += *carcols_mov;
@@ -177,8 +184,10 @@ bool ApplyRphHook(void)
 	rphHooksAttempted = true;
 	bool success = true;
 	success = indexHooksSucceeded;
-	if (!success)
+	if (!success) {
+		log("Index hooks not found!\n");
 		return false;
+	}
 
 	uintptr_t RphPrep = 0;
 	uintptr_t RphCall = 0;
@@ -186,10 +195,10 @@ bool ApplyRphHook(void)
 
 	RphPrep = GetSirenSetting_cache + 0x10;
 	RphPrep = *(uintptr_t*)RphPrep;
-	log("RphPrep: %p\n", (void*)RphPrep);
+	logDebug("RphPrep: %p\n", (void*)RphPrep);
 	RphCall = RphPrep + 0x2c;
 	RphCall += *(int32_t*)(RphPrep + 0x28);
-	log("RphCall: %p\n", (void*)RphCall);
+	logDebug("RphCall: %p\n", (void*)RphCall);
 
 	MEMORY_BASIC_INFORMATION mbiRph = { 0 };
 	MODULEINFO miRph = { 0 };
@@ -199,12 +208,14 @@ bool ApplyRphHook(void)
 		return false;
 	if (GetModuleInformation(GetCurrentProcess(), (HMODULE)mbiRph.BaseAddress, &miRph, sizeof(MODULEINFO)) == false)
 		return false;
-	log("RphAddress: %p %p %p\n", mbiRph.BaseAddress, mbiRph.RegionSize);
+	logDebug("RphAddress: %p %p %p\n", mbiRph.BaseAddress, mbiRph.RegionSize);
 	RphLogic = FindPatternEx((uintptr_t)miRph.lpBaseOfDll, miRph.SizeOfImage, RphHook_Pattern);
-	log("RphCall: %p", (void*)RphLogic);
-	if (RphLogic == 0)
+	logDebug("RphCall: %p", (void*)RphLogic);
+	if (RphLogic == 0) {
+		log("RPH logic not found!\n");
 		return false;
-
+	}
+	log("Found RPH patterns.\n");
 	{
 		RphHookPrep_ret = (void*)InsertHook(RphPrep, (uintptr_t)&RphHookPrep_patch);
 		uint8_t dxcpy[3] = { 0x0F, 0xB7, 0xD0 };
