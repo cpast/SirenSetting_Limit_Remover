@@ -16,7 +16,7 @@ const pattern RegisterSirenIDs_Pattern = { "48 8b 6e 48 8b fb 48 69 ff e8 05 00 
 const pattern CSirenSetting_Clone_Pattern = { "88 01 8b 42 04 48 83 c1 3c 89 41 c8 8b 42 08 48 83 c2 3c 89 41 cc", 0x12 };
 const pattern CopyVarToModel_Pattern = { "8a 46 49 49 8b 73 18 88 87 3b 05 00 00 49 8b e3", 0xfb };
 const pattern SetFlags_pattern = { "f3 0f 59 c8 f3 0f 2c c1 03 c7 66 0f 6e c0 0f 5b c0 f3 0f 11", 0x35f };
-const pattern RphHook_Pattern = { "40 0f b6 c6 69 c0 e8 05 00 00 48 8b 11 48 98", 0xe8 };
+const pattern RphHook_Pattern = { "40 0f b6 c6 48 69 c0 e8 05 00 00 48 03 41 48", 0xeb };
 
 bool idHooksAttempted = false;
 bool idHooksSucceeded = false;
@@ -61,6 +61,10 @@ void LogRegisteredSirens(CVehicleModelInfoVarGlobal* Carcols, uint32_t startingI
 		log("SirenSetting %s: %i at %i\n", s->Name, s->Id, startingIndex + i);
 	}
 	logDebug("siren count: %4.4x\n", Carcols->sirens.count);
+}
+
+void LogConflict(CSirenSettings* siren1, CSirenSettings* siren2) {
+	log("CONFLICT: %s and %s share ID %i\n", siren1->Name, siren2->Name, siren1->Id);
 }
 
 bool ApplyIdHooks(void)
@@ -120,6 +124,12 @@ bool ApplyIdHooks(void)
 		uint8_t mergeb[3] = { 0x44, 0x39, 0x08 };
 		success = success && WriteForeignMemory(MergeSirenLists + 0x42, mergea, 5);
 		success = success && WriteForeignMemory(MergeSirenLists + 0x5e, mergeb, 3);
+		LogConflict_logic = &LogConflict;
+		uint8_t rel_jmp = *(uint8_t*)(MergeSirenLists + 0x62);
+		LogConflict_z_ret = (void*)(MergeSirenLists + 0x63 + rel_jmp);
+		LogConflict_nz_ret = (void*)InsertHookWithSkip(MergeSirenLists + 0x61,
+			MergeSirenLists + 0x63, (uintptr_t)&LogConflict_patch);
+		success = success && LogConflict_nz_ret;
 	}
 	logDebug("Merge: %s\n", success ? "true" : "false");
 	{
@@ -227,12 +237,11 @@ bool ApplyRphHook(void)
 	}
 	{
 		uint8_t sicpy[4] = { 0x41, 0x0F, 0xB7, 0xF0 };
-		success = success && WriteForeignMemory(RphLogic + 0x2a, sicpy, 4);
+		success = success && WriteForeignMemory(RphLogic + 0x1f, sicpy, 4);
 		uint8_t sicmp[4] = { 0x66, 0x83, 0xFE, 0x01 };
-		success = success && WriteForeignMemory(RphLogic + 0x7a, sicmp, 4);
-		uint8_t mult[10] = { 0x0F, 0xB7, 0xC6, 0x48, 0x69, 0xC0, 0xE8, 0x05, 0x00, 0x00 };
-		success = success && WriteForeignMemory(RphLogic + 0xe8, mult, 10);
-		success = success && NopInstruction(RphLogic + 0xf5);
+		success = success && WriteForeignMemory(RphLogic + 0x77, sicmp, 4);
+		uint8_t mult[11] = { 0x0F, 0xB7, 0xC6, 0x48, 0x69, 0xC0, 0xE8, 0x05, 0x00, 0x00, 0x90 };
+		success = success && WriteForeignMemory(RphLogic + 0xeb, mult, 11);
 	}
 
 	return success;
