@@ -40,10 +40,10 @@ void cleanup_log()
 HANDLE file = INVALID_HANDLE_VALUE;
 bool setup_attempted = false;
 
-void setup_log()
+bool setup_log()
 {
 	if (setup_attempted) {
-		return;
+		return (file != INVALID_HANDLE_VALUE);
 	}
 	file = CreateFile(TEXT("SirenSettings.log"), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (file == INVALID_HANDLE_VALUE) {
@@ -59,7 +59,9 @@ void setup_log()
 		MessageBox(NULL, msgBoxMessage, TEXT("Error"), MB_OK);
 		LocalFree(msgBoxMessage);
 		LocalFree(errorMessage);
+		return false;
 	}
+	return true;
 }
 
 void log(const char* fmt ...)
@@ -67,7 +69,8 @@ void log(const char* fmt ...)
 	va_list args;
 	va_start(args, fmt);
 	if (file == INVALID_HANDLE_VALUE)
-		setup_log();
+		if (!setup_log())
+			return;
 	char* outputString = NULL;
 	SIZE_T outputLen = vsnprintf(outputString, 0, fmt, args);
 	outputString = (char*)LocalAlloc(LMEM_ZEROINIT, outputLen + 1);
