@@ -62,14 +62,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>$(SolutionName)</TargetName>
+    <TargetExt>.asi</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>$(SolutionName)</TargetName>
+    <TargetExt>.asi</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Beta|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>$(SolutionName)</TargetName>
+    <TargetExt>.asi</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -143,6 +146,7 @@
     <ClInclude Include="debug.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="hooking.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="SirenSettings_patcher.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RageStructs.h" />
@@ -166,6 +170,9 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="HookingLib.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SirenSetting_Limit_Adjuster.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

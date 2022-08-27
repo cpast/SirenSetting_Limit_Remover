@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("RPH_lib")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("SirenSetting_Limit_Adjuster_RPHlib")]
+[assembly: AssemblyDescription("RPH enabler for SirenSetting Limit Adjuster")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("RPH_lib")]
-[assembly: AssemblyCopyright("Copyright ©  2020")]
+[assembly: AssemblyCompany("cpast")]
+[assembly: AssemblyProduct("SirenSetting Limit Adjuster")]
+[assembly: AssemblyCopyright("Copyright © 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
