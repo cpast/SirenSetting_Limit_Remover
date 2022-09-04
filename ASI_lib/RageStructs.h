@@ -35,6 +35,17 @@ struct parMemberDefinition {
     PsoDataType type;
 };
 
+struct parMemberDefinitionArray {
+    hash name;
+    uint8_t padding[4];
+    uint64_t offset;
+    PsoDataType type;
+    uint8_t padding2[0xf];
+    uint8_t eltSize;
+    uint8_t padding3[0x7];
+    uint8_t eltCount;
+};
+
 uint32_t joaat(const char* string);
 
 struct parserInfo {
@@ -104,11 +115,11 @@ struct CSirenSettings {
     uint8_t field_0x39;
     uint8_t field_0x3a;
     uint8_t field_0x3b;
-    struct EmergencyLight Lights[20];
+    struct EmergencyLight Lights[40];
     uint32_t NumSirens;
     char* Name;
 };
-static_assert(sizeof(CSirenSettings) == 0x5e8, "SirenSettings wrong size");
+static_assert(sizeof(CSirenSettings) == 0xb88, "SirenSettings wrong size");
 
 typedef struct CVehicleModelInfoVariation CVehicleModelInfoVariation, * PCVehicleModelInfoVariation;
 
@@ -145,3 +156,16 @@ struct CVehicleModelInfoVarGlobal {
     struct CSirenSetting_List sirens;
 };
 static_assert(offsetof(CVehicleModelInfoVarGlobal, sirens) == 0x48, "Carcols issue");
+
+struct CVehicle {
+    uint8_t padding[32];
+    CVehicleModelInfo* modelInfo;
+};
+
+struct CVehicleModelInfo
+{
+    uint8_t padding[0x18];
+    uint32_t nameHash;
+};
+
+extern uint16_t BoneTags[40];

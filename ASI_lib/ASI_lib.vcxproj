@@ -146,7 +146,7 @@
     <ClInclude Include="debug.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="hooking.h" />
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="SirenLights.h" />
     <ClInclude Include="SirenSettings_patcher.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RageStructs.h" />
@@ -160,6 +160,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Beta|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RageStructs.cpp" />
+    <ClCompile Include="SirenLights_patcher.cpp" />
     <ClCompile Include="SirenSettings_patcher.cpp" />
   </ItemGroup>
   <ItemGroup>

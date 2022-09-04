@@ -8,6 +8,7 @@
 
 const pattern CSirenSetting_Parser_Func = { "0f 85 ?? ?? ?? ?? b9 e8 05 00 00 e8", 0xe };
 const pattern CVehicleModelInfoVariation_Parser = { "a9 fe ea 18 00 00 00 00 00 00 00 00 00 00 00 00", 0 };
+const pattern CVehicleModelInfoVarGlobal_Parser = { "cf 0b d2 bd 00 00 00 00 00 00 00 00 00 00 00 00", 0 };
 const pattern CSirenSetting_Initialize_Pattern = { "c6 03 ff c7 43 ?? 00 00 80 3f c7 43 ?? 00 00 40 41 c7 43 ?? 00 00 00 41", 0x1F };
 const pattern MergeSirenLists_Pattern = { "8b eb 48 69 ed e8 05 00 00 48 03 2e", 0x36 };
 const pattern GetSirenSetting_Pattern = { "0f b6 c0 48 69 c0 e8 05 00 00 48 03 41", 0x11 };
@@ -25,6 +26,8 @@ bool indexHooksSucceeded = false;
 bool rphHooksAttempted = false;
 bool rphHooksSucceeded = false;
 uintptr_t GetSirenSetting_cache = 0;
+
+CSirenSettings* CloneSirenSettings(CSirenSettings* dst, CSirenSettings* src);
 
 void ComputeSirenSettings(CVehicleModelInfoVarGlobal* Carcols, CVehicleModelInfoVariation* variations) {
 	uint16_t id = 0x100 * variations->field_0x4c;
@@ -79,6 +82,8 @@ bool ApplyIdHooks(void)
 	logDebug("SirenSettingParser: %p %p\n", SirenSettingParser_Func - 9, SirenSettingParser);
 	parserInfo* VariationParser = (parserInfo*)FindPattern(CVehicleModelInfoVariation_Parser);
 	logDebug("VariationParser: %p\n", VariationParser);
+	parserInfo* GlobalVariationParser = (parserInfo*)FindPattern(CVehicleModelInfoVarGlobal_Parser);
+	logDebug("GlobalVariationParser: %p\n", GlobalVariationParser);
 	uintptr_t GetLightAndSirenIndices = FindPattern(GetLightAndSirenIndices_Pattern);
 	logDebug("GetIndex: %p\n", (void*)GetLightAndSirenIndices);
 	uintptr_t MergeSirenLists = FindPattern(MergeSirenLists_Pattern);
@@ -89,23 +94,31 @@ bool ApplyIdHooks(void)
 	logDebug("Clone: %p\n", (void*)CSirenSetting_Clone);
 	uintptr_t CSirenSetting_Initialize = FindPattern(CSirenSetting_Initialize_Pattern);
 	logDebug("Init: %p\n", (void*)CSirenSetting_Initialize);
-	success = SirenSettingParser && VariationParser && GetLightAndSirenIndices && MergeSirenLists && RegisterSirenIDs && CSirenSetting_Clone && CSirenSetting_Initialize;
+	uintptr_t CSirenSetting_InitializeLights = CSirenSetting_Initialize == NULL ? NULL : GetReferencedAddress(CSirenSetting_Initialize + 0x11);
+	success = SirenSettingParser && VariationParser && GlobalVariationParser && GetLightAndSirenIndices && MergeSirenLists && 
+		RegisterSirenIDs && CSirenSetting_Clone && CSirenSetting_Initialize && CSirenSetting_InitializeLights;
 	if (!success)
 		return false;
-	log("Found ID patterns.\n");
+	log("Found functions and parsers.\n");
 
 	parMemberDefinition* SirenId = SirenSettingParser->FindMember("id");
 	parMemberDefinition* VariationId = VariationParser->FindMember("sirenSettings");
-	if (SirenId == NULL || VariationId == NULL)
+	parMemberDefinitionArray* SirenLights = (parMemberDefinitionArray*) SirenSettingParser->FindMember("Lights");
+	parMemberDefinitionArray* GlobalSirenSettings = (parMemberDefinitionArray*)GlobalVariationParser->FindMember("Sirens");
+	parMemberDefinition* NumSirens = SirenSettingParser->FindMember("NumSirens");
+	parMemberDefinition* SirenSettingName = SirenSettingParser->FindMember("Name");
+
+	if (SirenId == NULL || VariationId == NULL || SirenLights == NULL || NumSirens == NULL || SirenSettingName == NULL || GlobalSirenSettings == NULL)
 		return false;
-	log("Found ID members.\n");
+	log("Found parser members.\n");
 	SirenId->type = PsoDataType::u32;
 	VariationId->type = PsoDataType::u16;
+	SirenLights->eltCount = 40;
+	NumSirens->offset += 0x5a0;
+	SirenSettingName->offset += 0x5a0;
+	GlobalSirenSettings->eltSize += 0x5a0;
 	{
-		uint8_t clonea[2] = { 0x8b, 0x02 };
-		uint8_t cloneb[2] = { 0x89, 0x01 };
-		success = success && WriteForeignMemory(CSirenSetting_Clone + 0xa, clonea, 2);
-		success = success && WriteForeignMemory(CSirenSetting_Clone + 0x12, cloneb, 2);
+		InsertHook(CSirenSetting_Clone, (uintptr_t)CloneSirenSettings);
 	}
 	logDebug("Clone: %s\n", success ? "true" : "false");
 	{
@@ -117,13 +130,23 @@ bool ApplyIdHooks(void)
 		SirenSettings_init_ret = (void*) InsertHookWithSkip(CSirenSetting_Initialize + 0x1f, 
 			CSirenSetting_Initialize + 0x22, (uintptr_t) &SirenSettings_init_patch);
 		success = success && SirenSettings_init_ret;
+		uint8_t numsirens[8] = { 0x7c, 0x0b, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00 };
+		uint8_t thirtynine[4] = { 0x27, 0x00, 0x00, 0x00 };
+		uint8_t lastoffset[4] = { 0x40, 0x0b, 0x00, 0x00 };
+		uint8_t lastoffset[4] = { 0x40, 0x0b, 0x00, 0x00 };
+		success = success && WriteForeignMemory(CSirenSetting_InitializeLights + 0x1, thirtynine, 4);
+		success = success && WriteForeignMemory(CSirenSetting_InitializeLights + 0x63, lastoffset, 4);
+		success = success && WriteForeignMemory(CSirenSetting_Initialize + 0x7b, numsirens, 8);
 	}
 	logDebug("Init: %s\n", success ? "true" : "false");
 	{
 		uint8_t mergea[5] = { 0x44, 0x8b, 0x4d, 0x00, 0x90 };
 		uint8_t mergeb[3] = { 0x44, 0x39, 0x08 };
+		uint8_t newSize[4] = { 0x88, 0x0b, 0x00, 0x00 };
 		success = success && WriteForeignMemory(MergeSirenLists + 0x42, mergea, 5);
 		success = success && WriteForeignMemory(MergeSirenLists + 0x5e, mergeb, 3);
+		success = success && WriteForeignMemory(MergeSirenLists + 0x3b, newSize, 4);
+		success = success && WriteForeignMemory(MergeSirenLists + 0x68, newSize, 4);
 		LogConflict_logic = &LogConflict;
 		uint8_t rel_jmp = *(uint8_t*)(MergeSirenLists + 0x62);
 		LogConflict_z_ret = (void*)(MergeSirenLists + 0x63 + rel_jmp);
@@ -245,4 +268,9 @@ bool ApplyRphHook(void)
 	}
 
 	return success;
+}
+
+CSirenSettings* CloneSirenSettings(CSirenSettings* dst, CSirenSettings* src)
+{
+	memcpy(dst, src, sizeof(CSirenSettings));
 }

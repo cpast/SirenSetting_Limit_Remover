@@ -74,7 +74,7 @@ GetSirenSetting_patch:
 	jz .zero
 	mov rcx, qword [rel CarCols_loc]
 	mov rcx, qword [rcx]
-	imul rax, rax, 0x5e8
+	imul rax, rax, 0xb88
 	add rax, qword [rcx + 0x48]
 	jmp .return
 .zero:
