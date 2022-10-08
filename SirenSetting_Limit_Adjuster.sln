@@ -5,11 +5,6 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASI_lib", "ASI_lib\ASI_lib.vcxproj", "{C82BF1A1-F1BD-48AC-A3A1-F43CCD79508E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RPH_lib", "RPH_lib\RPH_lib.csproj", "{18073087-47F3-4221-B580-4A1A021DBDEA}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C82BF1A1-F1BD-48AC-A3A1-F43CCD79508E} = {C82BF1A1-F1BD-48AC-A3A1-F43CCD79508E}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Beta|x64 = Beta|x64
@@ -23,12 +18,6 @@ Global
 		{C82BF1A1-F1BD-48AC-A3A1-F43CCD79508E}.Debug|x64.Build.0 = Debug|x64
 		{C82BF1A1-F1BD-48AC-A3A1-F43CCD79508E}.Release|x64.ActiveCfg = Release|x64
 		{C82BF1A1-F1BD-48AC-A3A1-F43CCD79508E}.Release|x64.Build.0 = Release|x64
-		{18073087-47F3-4221-B580-4A1A021DBDEA}.Beta|x64.ActiveCfg = Beta|x64
-		{18073087-47F3-4221-B580-4A1A021DBDEA}.Beta|x64.Build.0 = Beta|x64
-		{18073087-47F3-4221-B580-4A1A021DBDEA}.Debug|x64.ActiveCfg = Debug|x64
-		{18073087-47F3-4221-B580-4A1A021DBDEA}.Debug|x64.Build.0 = Debug|x64
-		{18073087-47F3-4221-B580-4A1A021DBDEA}.Release|x64.ActiveCfg = Release|x64
-		{18073087-47F3-4221-B580-4A1A021DBDEA}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

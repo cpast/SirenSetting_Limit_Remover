@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <cstddef>
+#define NUM_LIGHTS 40
+#define NUM_LIGHTS_SUPPORTED 32
 
 typedef uint32_t hash;
 
@@ -28,6 +30,20 @@ enum struct PsoDataType : uint8_t {
     f64 = 0x21
 };
 
+enum struct parMemberArraySubtype : uint8_t // 0xADE25B1B
+{
+    ATARRAY = 0,                        // 0xABE40192
+    ATFIXEDARRAY = 1,                   // 0x3A523E81
+    ATRANGEARRAY = 2,                   // 0x18A25B6B
+    POINTER = 3,                        // 0x47073D6E
+    MEMBER = 4,                         // 0x6CC11BB4
+    _0x2087BB00 = 5,                    // 0x2087BB00
+    POINTER_WITH_COUNT = 6,             // 0xE2980EB5
+    POINTER_WITH_COUNT_8BIT_IDX = 7,    // 0x254D33B1
+    POINTER_WITH_COUNT_16BIT_IDX = 8,   // 0xB66B6752
+    VIRTUAL = 9,                        // 0xAC01A1DC
+};
+
 struct parMemberDefinition {
 	hash name;
 	uint8_t padding[4];
@@ -35,14 +51,15 @@ struct parMemberDefinition {
     PsoDataType type;
 };
 
-struct parMemberDefinitionArray {
+struct parMemberArrayDefinition {
     hash name;
     uint8_t padding[4];
     uint64_t offset;
     PsoDataType type;
-    uint8_t padding2[0xf];
-    uint8_t eltSize;
-    uint8_t padding3[0x7];
+    parMemberArraySubtype subtype;
+    uint8_t padding2[0xe];
+    uint32_t eltSize;
+    uint8_t padding3[0x4];
     uint8_t eltCount;
 };
 
@@ -93,6 +110,8 @@ struct EmergencyLight {
     bool CastShadows;
 };
 
+static_assert(sizeof(EmergencyLight) == 0x48, "EmergencyLight is the wrong size");
+
 struct CSirenSettings {
     uint32_t Id;
     float TimeMultiplier;
@@ -112,14 +131,67 @@ struct CSirenSettings {
     uint8_t LTaillightMult;
     uint8_t RTaillightMult;
     bool UseRealLights;
-    uint8_t field_0x39;
-    uint8_t field_0x3a;
-    uint8_t field_0x3b;
-    struct EmergencyLight Lights[40];
+    uint8_t padding[7];
+    EmergencyLight* Lights;
+    uint16_t lightCount;
+    uint16_t lightSize;
+    uint8_t padding2[0x5a0 - 0x10];
     uint32_t NumSirens;
     char* Name;
 };
-static_assert(sizeof(CSirenSettings) == 0xb88, "SirenSettings wrong size");
+static_assert(sizeof(CSirenSettings) == 0x5e8, "SirenSettings wrong size");
+
+struct CSirenSettingsExpanded {
+    uint32_t Id;
+    float TimeMultiplier;
+    float LightFallOffMax;
+    float LightFallOffExponent;
+    float LightInnerConeAngle;
+    float LightOuterConeAngle;
+    float LightOffset;
+    uint32_t TextureHash;
+    uint32_t Bpm;
+    uint32_t LHeadlightSeq;
+    uint32_t RHeadlightSeq;
+    uint32_t LTaillightSeq;
+    uint32_t RTaillightSeq;
+    uint8_t LHeadlightMult;
+    uint8_t RHeadlightMult;
+    uint8_t LTaillightMult;
+    uint8_t RTaillightMult;
+    bool UseRealLights;
+    uint8_t padding[3];
+    EmergencyLight Lights[NUM_LIGHTS];
+    uint32_t NumSirens;
+    char* Name;
+};
+
+static_assert(sizeof(CSirenSettingsExpanded) == 0x48 + NUM_LIGHTS * sizeof(EmergencyLight), "Expanded SirenSettings wrong size");
+
+struct SirenBuffer {
+    uint32_t Seed;
+    int32_t AdjustedTime;
+    int32_t BeatNumber;
+    int32_t RotatorLastBeatMask[NUM_LIGHTS];
+    int32_t RotatorLastBeatTime[NUM_LIGHTS];
+    int32_t FlasherLastBeatMask[NUM_LIGHTS];
+    int32_t FlasherLastBeatTime[NUM_LIGHTS];
+    int32_t HeadlightLastBeatMask[4];
+    int32_t HeadlightLastBeatTime[4];
+    float HeadlightIntensity[4];
+    uint32_t HeadlightStatus;
+    uint64_t RotatorStatus;
+    uint64_t FlasherStatus;
+};
+
+static_assert(sizeof(SirenBuffer) == 0x50 + 0x10 * NUM_LIGHTS, "SirenBuffer wrong size");
+
+struct CSirenSettings_atArray
+{
+    CSirenSettings* sirens;
+    uint16_t count;
+    uint16_t size;
+};
 
 typedef struct CVehicleModelInfoVariation CVehicleModelInfoVariation, * PCVehicleModelInfoVariation;
 
@@ -157,15 +229,16 @@ struct CVehicleModelInfoVarGlobal {
 };
 static_assert(offsetof(CVehicleModelInfoVarGlobal, sirens) == 0x48, "Carcols issue");
 
-struct CVehicle {
-    uint8_t padding[32];
-    CVehicleModelInfo* modelInfo;
-};
-
 struct CVehicleModelInfo
 {
     uint8_t padding[0x18];
     uint32_t nameHash;
 };
+
+struct CVehicle {
+    uint8_t padding[32];
+    CVehicleModelInfo* modelInfo;
+};
+
 
 extern uint16_t BoneTags[40];

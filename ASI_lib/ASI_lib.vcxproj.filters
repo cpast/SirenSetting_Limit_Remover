@@ -30,10 +30,10 @@
     <ClInclude Include="debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hooking.h">
+    <ClInclude Include="SirenLights.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SirenLights.h">
+    <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -63,10 +63,7 @@
     </NASM>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="HookingLib.lib" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="SirenSetting_Limit_Adjuster.rc">
+    <ResourceCompile Include="ASI_lib.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

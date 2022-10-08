@@ -3,40 +3,37 @@
 #include <cstdarg>
 #include <cstdio>
 
+#include <strsafe.h>
+#include <cassert>
+
 #ifdef SSA_BETA
-
-FILE* file = NULL;
-
-void setup_log()
-{
-	fopen_s(&file, "siren.log", "w");
-}
 
 void logDebug(const char* fmt ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	if (file == NULL)
-		setup_log();
-	vfprintf(file, fmt, args);
-	fflush(file);
+	vlog(fmt, args);
 }
 
-void log(const char* fmt ...)
+void flushLog(HANDLE log)
 {
-	va_list args;
-	va_start(args, fmt);
-	logDebug(fmt, args);
-}
-
-void cleanup_log()
-{
-	fclose(file);
+	FlushFileBuffers(log);
 }
 
 #else
-#include <strsafe.h>
-#include <cassert>
+
+void logDebug(const char* fmt ...)
+{
+	return;
+}
+
+void flushLog(HANDLE log)
+{
+	return;
+}
+
+#endif
+
 
 HANDLE file = INVALID_HANDLE_VALUE;
 bool setup_attempted = false;
@@ -72,6 +69,11 @@ void log(const char* fmt ...)
 {
 	va_list args;
 	va_start(args, fmt);
+	vlog(fmt, args);
+}
+
+void vlog(const char* fmt, va_list args)
+{
 	if (file == INVALID_HANDLE_VALUE || file == 0)
 		if (!setup_log())
 			return;
@@ -80,14 +82,10 @@ void log(const char* fmt ...)
 	char* outputString = NULL;
 	SIZE_T outputLen = vsnprintf(outputString, 0, fmt, args);
 	outputString = (char*)LocalAlloc(LMEM_ZEROINIT, outputLen + 1);
-	vsnprintf(outputString, outputLen+1, fmt, args);
+	vsnprintf(outputString, outputLen + 1, fmt, args);
 	WriteFile(file, outputString, outputLen, NULL, NULL);
 	LocalFree(outputString);
-}
-
-void logDebug(const char* fmt ...)
-{
-	return;
+	flushLog(file);
 }
 
 void cleanup_log()
@@ -98,5 +96,3 @@ void cleanup_log()
 	}
 	return;
 }
-
-#endif
