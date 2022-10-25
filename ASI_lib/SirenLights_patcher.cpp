@@ -9,47 +9,59 @@
 
 CRITICAL_SECTION mapMutex;
 
-std::map<uint32_t, int32_t*> BoneMap;
+std::map<uint32_t, int32_t*> SirenBoneMap;
+std::map<uint32_t, int32_t*> GlassBoneMap;
 
 int32_t (*GetBoneIndexFromId)(void* entity, uint16_t boneTag) = NULL;
-CSirenSettingsExpanded expandedSettings = { 0 };
 
 const Pattern DrawSirenLights_Pattern = { "0f 29 70 a8 0f 29 78 98 44 0f 29 40 88 4c 8b f9 44 0f 29 88 78 ff ff ff 44 0f 29 90 68 ff ff ff 44 0f 29 98 58 ff ff ff", 0x27 };
 const Pattern GetHeadlightStatus_Pattern = { "0f b6 d2 41 0f b6 c0 4c 8b c9 8d 0c 50 0f b6 d1 41 8b 89 84 01 00 00", 0 };
 const Pattern GetHeadlightIntensity_Pattern = { "0f b6 d2 41 0f b6 c0 8d 14 50 f3 0f 10 84 91 6c 01 00 00 c3", 0 };
 const Pattern CheckForBrokenSirens_Pattern = { "4c 8b 8f ?? ?? ?? ?? 49 8b 41 20 48 8b 88 b0 00 00 00 48 8b 01 0f be 54 30 10", 0x68e };
+const Pattern CheckForBrokenSirensTwo_Pattern = { "41 8b cf 45 8b f7 41 bc 01 00 00 00 83 e1 1f 49 c1 ee 05 41 d3 e4", 0x412 };
+const Pattern InitThingy_Pattern = { "41 8b c6 41 8b ce 48 c1 e8 05 83 e1 1f 8b 84 87", 0x68 };
 
 int32_t CheckSirenBoneArray(uint32_t bone, CVehicle* vehicle)
 {
 	uint32_t vehName = vehicle->modelInfo->nameHash;
-	assert(BoneMap.count(vehName));
-	return BoneMap.at(vehName)[bone];
+	assert(SirenBoneMap.count(vehName));
+	return SirenBoneMap.at(vehName)[bone];
 }
 
-void MakeSirenBoneArray(CVehicle* vehicle)
+int32_t CheckGlassBoneArray(uint32_t bone, CVehicle* vehicle)
+{
+	uint32_t vehName = vehicle->modelInfo->nameHash;
+	assert(GlassBoneMap.count(vehName));
+	return GlassBoneMap.at(vehName)[bone];
+}
+
+void MakeBoneArrays(CVehicle* vehicle)
 {
 	uint32_t vehName = vehicle->modelInfo->nameHash;
 	EnterCriticalSection(&mapMutex);
 	logDebug("%8.8x: ", vehName);
-	if (BoneMap.count(vehName))
+	if (SirenBoneMap.count(vehName))
 	{
-		logDebug("FOUND %p\n", BoneMap.at(vehName));
+		logDebug("FOUND %p\n", SirenBoneMap.at(vehName));
 	}
 	else
 	{
 		logDebug("Building... ");
-		int32_t* newArray = (int32_t*)malloc(NUM_LIGHTS * sizeof(int32_t));
-		if (newArray == NULL)
+		int32_t* newSirenArray = (int32_t*)malloc(NUM_LIGHTS * sizeof(int32_t));
+		int32_t* newGlassArray = (int32_t*)malloc(NUM_LIGHTS * sizeof(int32_t));
+		if (newSirenArray == NULL || newGlassArray == NULL)
 		{
 			LeaveCriticalSection(&mapMutex);
 			return;
 		}
 		for (int i = 0; i < NUM_LIGHTS; i++)
 		{
-			newArray[i] = GetBoneIndexFromId((void*)vehicle, BoneTags[i]);
+			newSirenArray[i] = GetBoneIndexFromId((void*)vehicle, SirenBoneTags[i]);
+			newGlassArray[i] = GetBoneIndexFromId((void*)vehicle, GlassBoneTags[i]);
 		}
-		BoneMap[vehName] = newArray;
-		logDebug("Built: %p\n", newArray);
+		SirenBoneMap[vehName] = newSirenArray;
+		GlassBoneMap[vehName] = newGlassArray;
+		logDebug("Built: %p\n", newSirenArray);
 	}
 	LeaveCriticalSection(&mapMutex);
 	return;
@@ -77,13 +89,43 @@ void InitializeSirenBufferBesidesSeed(SirenBuffer* buffer)
 	buffer->HeadlightStatus = 0;
 }
 
+bool ApplyMiscBoneCheckHooks()
+{
+	uintptr_t CheckBrokenLoc = FindPattern(CheckForBrokenSirens_Pattern);
+	if (CheckBrokenLoc == NULL)
+		return false;
+	CheckBroken_ret = InsertHookWithSkip(CheckBrokenLoc + 0x695, CheckBrokenLoc + 0x6a8, (uintptr_t)&CheckBroken_patch);
+	if (CheckBroken_ret == NULL)
+		return false;
+	int32_t endBoneId = *(int32_t*)(CheckBrokenLoc + 0x7bc) + (NUM_LIGHTS_SUPPORTED - 20);
+	WriteForeignMemory(CheckBrokenLoc + 0x7bc, &endBoneId, 4);
+	CheckBrokenGlass_ret = InsertNearHookWithSkip(CheckBrokenLoc + 0x758, CheckBrokenLoc + 0x75d, (uintptr_t)&CheckBrokenGlass_patch);
+	if (CheckBrokenGlass_ret == NULL)
+		return false;
+
+	uintptr_t CheckBrokenLocTwo = FindPattern(CheckForBrokenSirensTwo_Pattern);
+	if (CheckBrokenLocTwo == NULL)
+		return false;
+	CheckBrokenTwo_ret = InsertHookWithSkip(CheckBrokenLocTwo + 0x3f6, CheckBrokenLocTwo + 0x409, (uintptr_t)&CheckBrokenTwo_patch);
+	if (CheckBrokenTwo_ret == NULL)
+		return false;
+	WriteForeignMemory(CheckBrokenLocTwo + 0x55b, &endBoneId, 4);
+	CheckBrokenTwoGlass_ret = InsertNearHookWithSkip(CheckBrokenLocTwo + 0x501, CheckBrokenLocTwo + 0x506, (uintptr_t)&CheckBrokenTwoGlass_patch);
+	if (CheckBrokenTwoGlass_ret == NULL)
+		return false;
+
+	uintptr_t InitThingyLoc = FindPattern(InitThingy_Pattern);
+	if (InitThingyLoc == NULL)
+		return false;
+	InitThingy_ret = InsertHookWithSkip(InitThingyLoc + 0x88, InitThingyLoc + 0x9b, (uintptr_t)&InitThingy_patch);
+	if (InitThingy_ret == NULL)
+		return false;
+	return WriteForeignMemory(InitThingyLoc + 0xb2, &endBoneId, 4);
+}
+
 bool ApplySirenBufferHooks()
 {
 	InitializeCriticalSection(&mapMutex);
-	pExpandedSettings = &expandedSettings;
-	BoneSetup_logic = (uintptr_t) &MakeSirenBoneArray;
-	BoneCheck_logic = (uintptr_t) &CheckSirenBoneArray;
-	ExpandSettings_logic = (uintptr_t)&ExpandSirenSettings;
 	free_logic = (uintptr_t)&free;
 	pattern BufferMallocPtn = { "48 8b d8 48 85 c0 74 0c 33 d2 48 8b c8", 0x5b5 };
 	uintptr_t BufferMallocLoc = FindPattern(BufferMallocPtn);
@@ -91,7 +133,7 @@ bool ApplySirenBufferHooks()
 	{
 		return false;
 	}
-	uint32_t BufferSize = 0x2d0;
+	uint32_t BufferSize = sizeof(SirenBuffer);
 	WriteForeignMemory(BufferMallocLoc + 0x5ac, &BufferSize, sizeof(uint32_t));
 	uintptr_t BufferInitLoc = GetReferencedAddress(BufferMallocLoc + 0x5c2);
 	if (BufferInitLoc == NULL)
@@ -113,14 +155,9 @@ bool ApplySirenBufferHooks()
 	}
 	GetBoneIndexFromId = (int32_t(*)(void*, uint16_t))BoneIndexLoc;
 
-	uintptr_t CheckBrokenLoc = FindPattern(CheckForBrokenSirens_Pattern);
-	if (CheckBrokenLoc == NULL)
+	bool bonechecks = ApplyMiscBoneCheckHooks();
+	if (!bonechecks)
 		return false;
-	CheckBroken_ret = InsertHookWithSkip(CheckBrokenLoc + 0x695, CheckBrokenLoc + 0x6a8, (uintptr_t)&CheckBroken_patch);
-	if (CheckBroken_ret == NULL)
-		return false;
-	int32_t endBoneId = *(int32_t*)(CheckBrokenLoc + 0x7bc) + 12;
-	WriteForeignMemory(CheckBrokenLoc + 0x7bc, &endBoneId, 4);
 
 	uintptr_t DrawSirenLights = FindPattern(DrawSirenLights_Pattern);
 	if (DrawSirenLights == NULL)
@@ -145,7 +182,7 @@ bool ApplySirenBufferHooks()
 		uint32_t LightStatus = offsetof(SirenBuffer, HeadlightStatus);
 		uint32_t FlasherStatus = offsetof(SirenBuffer, FlasherStatus);
 		uint32_t RotatorStatus = offsetof(SirenBuffer, RotatorStatus);
-		uint8_t SirenCount = 0x20; // TODO: Make 0x28
+		uint8_t SirenCount = NUM_LIGHTS_SUPPORTED; // TODO: Make 0x28
 		uint32_t MaxBoneId = 0;
 		uintptr_t FlasherBeatMaskRefs[3] = { 0x5be, 0x5d3, 0x5dd };
 		uintptr_t FlasherBeatTimeRefs[2] = { 0x5ec, 0x610 };
@@ -178,7 +215,7 @@ bool ApplySirenBufferHooks()
 		success = success && DSL_RotateBeatTimeSet_ret && DSL_RotateBeatTimeSub_ret && DSL_BoneCheck_ret && DSL_PreCompute_ret && DSL_Return_ret;
 
 		MaxBoneId = *(uint32_t*)(DrawSirenLights + 0xe43);
-		MaxBoneId += 12; // TODO: Make 20
+		MaxBoneId += (NUM_LIGHTS_SUPPORTED - 20); // TODO: Make 20
 		success = success && WriteForeignMemory(DrawSirenLights + 0xe43, &MaxBoneId, sizeof(uint32_t));
 	}
 	if (!success)

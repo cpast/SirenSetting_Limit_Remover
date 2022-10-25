@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <cstddef>
-#define NUM_LIGHTS 40
+#define NUM_LIGHTS 32
 #define NUM_LIGHTS_SUPPORTED 32
 
 typedef uint32_t hash;
@@ -241,4 +241,5 @@ struct CVehicle {
 };
 
 
-extern uint16_t BoneTags[40];
+extern uint16_t SirenBoneTags[64];
+extern uint16_t GlassBoneTags[64];

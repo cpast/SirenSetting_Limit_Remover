@@ -27,10 +27,6 @@ uintptr_t GetSirenSetting_cache = 0;
 void* (*GtaMalloc)(uint32_t, uint32_t) = NULL;
 void (*GtaFree)(void*) = NULL;
 
-CSirenSettings* CloneSirenSettings(CSirenSettings* dst, CSirenSettings* src);
-void FreeSirenSettingsAtArray(CSirenSettings_atArray* toFree);
-void FreeSirenSettings(CSirenSettings* toFree);
-
 void ComputeSirenSettings(CVehicleModelInfoVarGlobal* Carcols, CVehicleModelInfoVariation* variations) {
 	uint16_t id = 0x100 * variations->field_0x4c;
 	id += variations->sirenId;
@@ -139,7 +135,6 @@ bool ApplyIdHooks(void)
 			CSirenSetting_Initialize + 0x22, (uintptr_t) &SirenSettings_init_patch);
 		success = success && SirenSettings_init_ret;
 		success = success && NopInstruction(CSirenSetting_Initialize + 0x11);
-		SirenSettings_Free_logic = &FreeSirenSettings;
 		SirenSettings_Free_ret = (void*) InsertNearHookWithSkip(SirenSettingParser_Func + 0x1e, SirenSettingParser_Func + 0x25, (uintptr_t)&SirenSettings_Free_patch);
 		success = success && SirenSettings_Free_ret;
 	}
@@ -155,7 +150,6 @@ bool ApplyIdHooks(void)
 		LogConflict_nz_ret = (void*)InsertHookWithSkip(MergeSirenLists + 0x61,
 			MergeSirenLists + 0x63, (uintptr_t)&LogConflict_patch);
 		success = success && LogConflict_nz_ret;
-		SirenSettings_ReallocFree_logic = &FreeSirenSettingsAtArray;
 		SirenSettings_ReallocFree_ret = (void*)InsertNearHookWithSkip(ReallocSirenLists + 0x91, ReallocSirenLists + 0x99, (uintptr_t)&SirenSettings_ReallocFree_patch);
 		success = success && SirenSettings_ReallocFree_ret;
 	}
