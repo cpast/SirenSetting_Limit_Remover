@@ -128,7 +128,7 @@ ComputeSirenIndex_patch:
 	push r9
 	push r10
 	push r11
-	sub rsp, 0x20
+	sub rsp, 0x20 ; Note: original function is unaligned, so this 8-byte misalignment is actually correct.
 	mov rcx, rax
 	call [rel ComputeSirenIndex_logic]
 	add rsp, 0x20
