@@ -19,7 +19,6 @@ extern "C" void* ComputeSirenIndex_logic;
 extern "C" void* LogConflict_patch;
 extern "C" void* LogConflict_nz_ret;
 extern "C" void* LogConflict_z_ret;
-extern "C" void* LogConflict_logic;
 extern "C" void* GetSirenSetting_patch;
 extern "C" void* RphOnGetSirenSettings;
 extern "C" void* GetSirenSetting_RPH_patch;

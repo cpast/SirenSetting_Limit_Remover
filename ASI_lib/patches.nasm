@@ -23,6 +23,7 @@ extern CheckSirenBoneArray
 extern CheckGlassBoneArray
 extern FreeSirenSettingsAtArray
 extern FreeSirenSettings
+extern LogConflict
 
 segment .data
 
@@ -40,9 +41,6 @@ LogConflict_nz_ret dq 0
 
 GLOBAL LogConflict_z_ret
 LogConflict_z_ret dq 0
-
-GLOBAL LogConflict_logic
-LogConflict_logic dq 0
 
 GLOBAL GetSirenSetting_ret
 GetSirenSetting_ret dq 0
@@ -198,11 +196,11 @@ LogConflict_patch:
 	push r9
 	push r10
 	push r11
-	sub rsp, 0x20
+	sub rsp, 0x28
 	mov rcx, rax
 	mov rdx, rbp
-	call [rel LogConflict_logic]
-	add rsp, 0x20
+	call LogConflict
+	add rsp, 0x28
 	pop r11
 	pop r10
 	pop r9

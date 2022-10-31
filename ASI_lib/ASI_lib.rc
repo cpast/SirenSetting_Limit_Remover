@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,0,0,0
- PRODUCTVERSION 2,0,0,0
+ FILEVERSION 2,0,1,0
+ PRODUCTVERSION 2,0,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,18 +69,40 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "cpast"
             VALUE "FileDescription", "Raises cap on GTA V SirenSettings entries"
-            VALUE "FileVersion", "2.0.0.0"
+            VALUE "FileVersion", "2.0.1.0"
             VALUE "InternalName", "SirenSetting_Limit_Adjuster.asi"
             VALUE "LegalCopyright", "Copyright (C) 2022"
             VALUE "OriginalFilename", "SirenSetting_Limit_Adjuster.asi"
             VALUE "ProductName", "SirenSetting Limit Adjuster"
-            VALUE "ProductVersion", "2.0.0.0"
+            VALUE "ProductVersion", "2.0.1.0"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
         VALUE "Translation", 0x409, 1200
     END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 2699
+//
+
+FX_ASI_BUILD 2699
+BEGIN
+    "\000" 
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 2372
+//
+
+FX_ASI_BUILD 2372
+BEGIN
+    "\000" 
 END
 
 #endif    // English (United States) resources
@@ -98,12 +120,3 @@ END
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
-FX_ASI_BUILD 2699
-BEGIN
-"\0"
-END
-
-FX_ASI_BUILD 2372
-BEGIN
-"\0"
-END

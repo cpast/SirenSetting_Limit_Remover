@@ -41,7 +41,7 @@ void ComputeSirenSettings(CVehicleModelInfoVarGlobal* Carcols, CVehicleModelInfo
 		return;
 	}
 	for (uint16_t i = 0; i < Carcols->sirens.count; i++) {
-		if (Carcols->sirens.sirens[i].Id == id) {
+		if ((uint16_t)(Carcols->sirens.sirens[i].Id) == id) {
 			variations->sirenIndex = (uint8_t)i;
 			variations->field_0x4d = i >> 8;
 			logDebug("Index computed: %s %2.2x %2.2x %4.4x\n", variations->name, variations->field_0x4d, variations->sirenIndex, i);
@@ -58,14 +58,23 @@ void ComputeSirenSettings(CVehicleModelInfoVarGlobal* Carcols, CVehicleModelInfo
 void LogRegisteredSirens(CVehicleModelInfoVarGlobal* Carcols, uint32_t startingIndex, int length) {
 	for (int i = 0; i < length; i++) {
 		CSirenSettings* s = Carcols->sirens.sirens + startingIndex + i;
-		logDebug("%s %4.4x %4.4x\n", s->Name, s->Id, startingIndex + i);
-		log("SirenSetting %s: %i at %i\n", s->Name, s->Id, startingIndex + i);
+		const char* siren_name = s->Name;
+		if (siren_name == NULL)
+			siren_name = "UNNAMED";
+		logDebug("%s %4.4x %4.4x\n", siren_name, s->Id, startingIndex + i);
+		log("SirenSetting %s: %i at %i\n", siren_name, (uint16_t)(s->Id), startingIndex + i);
 	}
 	logDebug("siren count: %4.4x\n", Carcols->sirens.count);
 }
 
 void LogConflict(CSirenSettings* siren1, CSirenSettings* siren2) {
-	log("CONFLICT: %s and %s share ID %i\n", siren1->Name, siren2->Name, siren1->Id);
+	const char* siren_1_name = siren1->Name;
+	if (siren_1_name == NULL)
+		siren_1_name = "UNNAMED";
+	const char* siren_2_name = siren2->Name;
+	if (siren_2_name == NULL)
+		siren_2_name = "UNNAMED";
+	log("CONFLICT: %s and %s share ID %i\n", siren_1_name, siren_2_name, (uint16_t)(siren1->Id));
 }
 
 bool ApplyIdHooks(void)
@@ -144,7 +153,6 @@ bool ApplyIdHooks(void)
 		uint8_t mergeb[3] = { 0x44, 0x39, 0x08 };
 		success = success && WriteForeignMemory(MergeSirenLists + 0x42, mergea, 5);
 		success = success && WriteForeignMemory(MergeSirenLists + 0x5e, mergeb, 3);
-		LogConflict_logic = &LogConflict;
 		uint8_t rel_jmp = *(uint8_t*)(MergeSirenLists + 0x62);
 		LogConflict_z_ret = (void*)(MergeSirenLists + 0x63 + rel_jmp);
 		LogConflict_nz_ret = (void*)InsertHookWithSkip(MergeSirenLists + 0x61,
