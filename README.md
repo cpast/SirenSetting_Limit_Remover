@@ -71,18 +71,19 @@ This ASI produces a SirenSettings.log file in your game directory. It records:
 Please link to an official upload instead of redistributing this yourself.
 
 ### Changelog ###
-2.0.1: Fixed some bugs leading to crashes. 
+
+2.0.1: Fixed some bugs leading to crashes.  
 2.0.0: Enabled the use of up to 32 sirens. Also reworked RPH compatibility and
-       added FiveM support.
+       added FiveM support.  
 1.1.0: Removed compatibility with RPH build 1.78 (for GTA build 1868.1). Added
        compatibility with RPH build 1.81 (for GTA build 2060).
 
 ### Credits ###
 
-cp702: Author
-LMS: RPH integration help
-LMS, alexguirre: Research assistance
-Cartres, Jacobmaate, PNWParksFan: Screenshots
-Cartres, Officer Failz, Jacobmaate, NefariousBonne: Testing
-PNWParksFan, SuperStumpje, Swed, 11john11         : Testing
+cp702: Author  
+LMS: RPH integration help  
+LMS, alexguirre: Research assistance  
+Cartres, Jacobmaate, PNWParksFan: Screenshots  
+Cartres, Officer Failz, Jacobmaate, NefariousBonne: Testing  
+PNWParksFan, SuperStumpje, Swed, 11john11         : Testing  
 Cartres, NefariousBonne, Officer Failz, PNWParksFan: Test vehicle creation
