@@ -255,3 +255,12 @@ void FreeSirenSettings(CSirenSettings* toFree)
 	if (toFree->lightSize != 0)
 		GtaFree(toFree->Lights);
 }
+
+void InitializeSirenSettings(CSirenSettings* toInit)
+{
+	toInit->Id = 0xFF;
+	toInit->Lights = (EmergencyLight*)GtaMalloc(sizeof(EmergencyLight) * NUM_LIGHTS_SUPPORTED, 0x10);
+	toInit->lightSize = NUM_LIGHTS_SUPPORTED;
+	toInit->lightCount = NUM_LIGHTS_SUPPORTED;
+	toInit->NumSirens = NUM_LIGHTS_SUPPORTED;
+}

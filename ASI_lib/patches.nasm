@@ -24,6 +24,7 @@ extern CheckGlassBoneArray
 extern FreeSirenSettingsAtArray
 extern FreeSirenSettings
 extern LogConflict
+extern InitializeSirenSettings
 
 segment .data
 
@@ -101,7 +102,14 @@ segment .text
 GLOBAL SirenSettings_init_patch
 
 SirenSettings_init_patch:
-	mov dword [rbx], 0xff
+	push rbx
+	push rcx
+	sub rsp, 20
+	mov rcx, rbx
+	call InitializeSirenSettings
+	add rsp, 20
+	pop rcx
+	pop rbx
 	jmp [rel SirenSettings_init_ret]
 
 GLOBAL SirenSettings_ReallocFree_patch

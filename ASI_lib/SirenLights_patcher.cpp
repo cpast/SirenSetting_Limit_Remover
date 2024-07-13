@@ -94,6 +94,7 @@ bool ApplyMiscBoneCheckHooks()
 	uintptr_t CheckBrokenLoc = FindPattern(CheckForBrokenSirens_Pattern);
 	if (CheckBrokenLoc == NULL)
 		return false;
+	logDebug("CheckBrokenLoc: %p\n", CheckBrokenLoc);
 	CheckBroken_ret = InsertHookWithSkip(CheckBrokenLoc + 0x695, CheckBrokenLoc + 0x6a8, (uintptr_t)&CheckBroken_patch);
 	if (CheckBroken_ret == NULL)
 		return false;
@@ -106,6 +107,7 @@ bool ApplyMiscBoneCheckHooks()
 	uintptr_t CheckBrokenLocTwo = FindPattern(CheckForBrokenSirensTwo_Pattern);
 	if (CheckBrokenLocTwo == NULL)
 		return false;
+	logDebug("CheckBrokenLocTwo: %p\n", CheckBrokenLocTwo);
 	CheckBrokenTwo_ret = InsertHookWithSkip(CheckBrokenLocTwo + 0x3f6, CheckBrokenLocTwo + 0x409, (uintptr_t)&CheckBrokenTwo_patch);
 	if (CheckBrokenTwo_ret == NULL)
 		return false;
@@ -117,6 +119,7 @@ bool ApplyMiscBoneCheckHooks()
 	uintptr_t InitThingyLoc = FindPattern(InitThingy_Pattern);
 	if (InitThingyLoc == NULL)
 		return false;
+	logDebug("InitThingyLoc: %p\n", InitThingyLoc);
 	InitThingy_ret = InsertHookWithSkip(InitThingyLoc + 0x88, InitThingyLoc + 0x9b, (uintptr_t)&InitThingy_patch);
 	if (InitThingy_ret == NULL)
 		return false;
@@ -133,11 +136,13 @@ bool ApplySirenBufferHooks()
 	{
 		return false;
 	}
+	logDebug("BufferMallocLoc: %p\n", BufferMallocLoc);
 	uint32_t BufferSize = sizeof(SirenBuffer);
 	WriteForeignMemory(BufferMallocLoc + 0x5ac, &BufferSize, sizeof(uint32_t));
 	uintptr_t BufferInitLoc = GetReferencedAddress(BufferMallocLoc + 0x5c2);
 	if (BufferInitLoc == NULL)
 		return false;
+	logDebug("BufferInitLoc: %p\n", BufferInitLoc);
 	if (InsertHookWithSkip(BufferInitLoc + 0x1c, BufferInitLoc + 0x2d, (uintptr_t)&InitializeSirenBufferBesidesSeed) == NULL)
 	{
 		return false;
@@ -148,11 +153,13 @@ bool ApplySirenBufferHooks()
 	{
 		return false;
 	}
+	logDebug("BoneIndexLoc: %p\n", BoneIndexLoc);
 	BoneIndexLoc = GetReferencedAddress(BoneIndexLoc + 0x61);
 	if (BoneIndexLoc == NULL)
 	{
 		return false;
 	}
+	logDebug("BoneIndexLoc 2: %p\n", BoneIndexLoc);
 	GetBoneIndexFromId = (int32_t(*)(void*, uint16_t))BoneIndexLoc;
 
 	bool bonechecks = ApplyMiscBoneCheckHooks();
@@ -162,12 +169,16 @@ bool ApplySirenBufferHooks()
 	uintptr_t DrawSirenLights = FindPattern(DrawSirenLights_Pattern);
 	if (DrawSirenLights == NULL)
 		return false;
+	logDebug("DrawSirenLights: %p\n", DrawSirenLights);
 
 	uintptr_t GetHeadlightStatus = FindPattern(GetHeadlightStatus_Pattern);
 	uintptr_t GetHeadlightIntensity = FindPattern(GetHeadlightIntensity_Pattern);
 
 	if (!GetHeadlightIntensity || !GetHeadlightStatus)
 		return false;
+
+	logDebug("GetHeadlightStatus: %p\n", GetHeadlightStatus);
+	logDebug("GetHeadlightIntensity: %p\n", GetHeadlightIntensity);
 
 	bool success = true;
 	
