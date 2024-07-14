@@ -10,7 +10,6 @@ extern "C" void ComputeSirenSettings(CVehicleModelInfoVarGlobal * Carcols, CVehi
 extern "C" CSirenSettings* CloneSirenSettings(CSirenSettings* dst, CSirenSettings* src);
 extern "C" void FreeSirenSettingsAtArray(CSirenSettings_atArray* toFree);
 extern "C" void FreeSirenSettings(CSirenSettings* toFree);
-extern "C" void InitializeSirenSettings(CSirenSettings * toInit);
 
 extern "C" void* SirenSettings_init_patch;
 extern "C" void* SirenSettings_init_ret;
